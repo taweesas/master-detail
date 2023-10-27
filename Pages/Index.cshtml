@@ -1,0 +1,110 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+@section Styles {
+    <style type="text/css">
+        .details-row td {
+            background-color: #f9f9f9;
+        }
+
+        .sub-details-row td {
+            background-color: #9cbfd6;
+        }
+    </style>
+}
+
+<table id="example" class="table table-bordered" style="width:100%"></table>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#example').DataTable({
+                ajax: {
+                    type: "POST",
+                    url: '@Url.Content("~/api/School/GetListSchoolData")'
+                },
+                processing: true,
+                serverSide: true,
+                columns: [
+                    { defaultContent: "" },
+                    { data: "SchoolId", title: "School ID" },
+                    { data: "SchoolName", title: "School Name" },
+                    { data: "StudentId", title: "Student ID" },
+                    { data: "StudentName", title: "Student Name" },
+                    { data: "PetId", title: "Pet ID" },
+                    { data: "PetName", title: "Pet Name" }
+                ]
+            });
+
+            $('#example tbody').on('click', 'tr:not(.details-row):not(.sub-details-row)', function () {
+                var tr = $(this);
+                var row = table.row(tr);
+                var rowData = row.data();
+                
+                if (tr.hasClass('shown')) {
+                    tr.nextAll('tr.details-row, tr.sub-details-row').remove();
+                    
+                    tr.removeClass('shown');
+                }
+                else {
+                    $.get('@Url.Content("~/api/School/GetListStudentData")', { id: rowData.SchoolId }, function (data) {
+                        
+                        var detailRows = '';
+                        
+                        $.each(data, function (index, student) {
+                            detailRows += `<tr class="details-row" data-student-id="${student.StudentId}">
+                                <td></td>
+                                <td>${student.SchoolId}</td>
+                                <td>${student.SchoolName}</td>
+                                <td>${student.StudentId}</td>
+                                <td>${student.StudentName}</td>
+                                <td>${student.PetId}</td>
+                                <td>${student.PetName}</td>
+                                </tr>`;
+                        });
+                        
+                        $(tr).after(detailRows);
+                        tr.addClass('shown');
+                    });
+                }
+            });
+
+            $('#example tbody').on('click', 'tr.details-row', function (event) {
+                event.stopPropagation();
+                
+                var tr = $(this);
+
+                if (tr.hasClass('sub-shown')) {
+                    tr.next('tr.sub-details-row').remove();
+                    tr.removeClass('sub-shown');
+                }
+                else {
+                    var studentId = tr.data('student-id');
+
+                    $.get('@Url.Content("~/api/School/GetListPetData")', { id: tr.data('student-id') }, function (data) {
+                        var subDetailRows = '';
+                        
+                        $.each(data, function (index, pet) {
+                            subDetailRows += `<tr class="sub-details-row">
+                                <td></td>
+                                <td>${pet.SchoolId}</td>
+                                <td>${pet.SchoolName}</td>
+                                <td>${pet.StudentId}</td>
+                                <td>${pet.StudentName}</td>
+                                <td>${pet.PetId}</td>
+                                <td>${pet.PetName}</td>
+                                </tr>`;
+                        });
+
+                        $(tr).after(subDetailRows);
+                        
+                        tr.addClass('sub-shown');
+                    });
+                }
+            });
+        });
+    </script>
+}
