@@ -78,7 +78,7 @@
                 var tr = $(this);
 
                 if (tr.hasClass('sub-shown')) {
-                    tr.next('tr.sub-details-row').remove();
+                    tr.nextAll('tr.sub-details-row').remove();
                     tr.removeClass('sub-shown');
                 }
                 else {
